@@ -17,15 +17,18 @@ public class Patient extends SimProcess {
 	public void lifeCycle() throws SuspendExecution {
 		ClinicModel model = (ClinicModel) this.getModel();
 		this.arrivalTime = model.presentTime().getTimeAsDouble();
-		model.sendTraceNote("Patient is arriving in System");
+		model.sendTraceNote("Patient is arriving in System at time "+this.arrivalTime);
 		// k/8 chance of leaving for k patients in the queue already.
 		boolean doesBalk = model.doesPatientBalk(model.patientWaitingForNurseQueue.length());
 		if (doesBalk == true) {
 			//patient leaves the system and costs clinic big money.
 			model.costIncuredByClinic.update(500);
+			model.sendTraceNote("Patient is balking there was a "+model.patientWaitingForNurseQueue.length()+"/8 chance of balking");
 		}
 		else{
+			
 			//they stay and enter the system.
+			model.sendTraceNote("Patient is entering service");
 			model.patientWaitingForNurseQueue.insert(this);
 			if(!model.nurseIdleQueue.isEmpty()){
 				//get nurse for service, and remove nurse from idle queue
@@ -54,13 +57,15 @@ public class Patient extends SimProcess {
 				else{
 					//the patient needed a specialist but spent too much time in system already or not enough rooms.
 					//cost clinic money
+					model.sendTraceNote("Patient needed a specialist but was in system for longer then 30min");
 					model.costIncuredByClinic.update(500);
 				}
 			}
 			//we are done.
 		}
 		this.passivate();
-		model.sendTraceNote("Patient leaves the system");
+		double timeInSystem = model.presentTime().getTimeAsDouble()-this.arrivalTime;
+		model.sendTraceNote("Patient leaves the system (after completion or any other reason) time spent in system was " +timeInSystem);
 	}
 
 }
